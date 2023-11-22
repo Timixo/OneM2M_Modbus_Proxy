@@ -6,10 +6,18 @@ namespace Modbus_Interworking_Proxy.Controllers
     [Route("api/[controller]")]
     public class ModbusDeviceController : ControllerBase
     {
-        [HttpGet(Name = "GetTest")]
+        public ModbusDeviceController() { }
+
+        [HttpGet("Test")]
         public ObjectResult GetTest()
         {
             return Ok("Test");
+        }
+
+        [HttpGet("Test2")]
+        public ObjectResult GetTest2()
+        {
+            return Ok("Test2");
         }
     }
 }
