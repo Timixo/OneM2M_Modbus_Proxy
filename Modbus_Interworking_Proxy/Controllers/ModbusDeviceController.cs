@@ -21,6 +21,10 @@ namespace Modbus_Interworking_Proxy.Controllers
         {
             try
             {
+                // Set the Accept header to specify that we want JSON
+                _httpClient.DefaultRequestHeaders.Accept.Clear();
+                _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
                 HttpResponseMessage response = await _httpClient.GetAsync(_connectionAddress + "?api=" + id);
 
                 if (response.IsSuccessStatusCode)
