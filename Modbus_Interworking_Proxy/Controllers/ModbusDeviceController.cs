@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Modbus_Interworking_Proxy.Models;
 using System.Net.Http.Headers;
+using System.Text;
 
 namespace Modbus_Interworking_Proxy.Controllers
 {
@@ -51,21 +52,29 @@ namespace Modbus_Interworking_Proxy.Controllers
                 return BadRequest("ConnectionAddress is required");
             }
 
-            var payload = new
-            {
-                m2m = new
-                {
-                    ae = new
-                    {
-                        rn = "Modbus Interworking Proxy",
-                        api = "MIP"
-                    }
-                }
-            };
+            //var payload = new
+            //{
+            //    m2m = new
+            //    {
+            //        ae = new
+            //        {
+            //            rn = "Modbus Interworking Proxy",
+            //            api = "MIP"
+            //        }
+            //    }
+            //};
+
+            string payload = "{ \"m2m:ae\": { \"rn\": \"Modbus-Interworking-Proxy\", \"api\": \"MIP\", \"rr\": \"true\", \"poa\": [\"http://localhost:1000\"] } }";
 
             try
             {
-                HttpResponseMessage response = await _httpClient.PostAsJsonAsync(model.ConnectionAddress, payload);
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, model.ConnectionAddress);
+                request.Content = new StringContent(payload, Encoding.UTF8, "application/json"); // Set custom Content-Type header
+
+                // Set custom Content-Type header
+                request.Content.Headers.ContentType.Parameters.Add(new NameValueHeaderValue("ty", "2"));
+
+                HttpResponseMessage response = await _httpClient.SendAsync(request);
 
                 if (response.IsSuccessStatusCode)
                 {
