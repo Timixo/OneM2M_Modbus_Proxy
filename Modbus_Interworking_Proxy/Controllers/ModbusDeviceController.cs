@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Modbus_Interworking_Proxy.Models;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -9,7 +8,8 @@ namespace Modbus_Interworking_Proxy.Controllers
     [Route("api/[controller]")]
     public class ModbusDeviceController : ControllerBase
     {
-        private string _connectionAddress = "in-name";
+        private string _baseConnectionAddress = "in-name";
+        private string _connectionAddress = null;
         private readonly HttpClient _httpClient;
 
         public ModbusDeviceController(IHttpClientFactory httpClientFactory)
@@ -17,58 +17,33 @@ namespace Modbus_Interworking_Proxy.Controllers
             _httpClient = httpClientFactory.CreateClient("OM2MHttpClient");
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetDevice([FromQuery] string id)
+        [HttpPost("ConnectOM2M")]
+        public async Task<IActionResult> ConnectToOM2M()
         {
+            string rn = "Modbus-Interworking-Proxy";
+            string api = "MIP";
+            string rr = "true";
+            string poa = "http://localhost:1000";
+
             try
             {
-                // Set the Accept header to specify that we want JSON
-                _httpClient.DefaultRequestHeaders.Accept.Clear();
-                _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                HttpResponseMessage response = await _httpClient.GetAsync(_connectionAddress + "?api=" + id);
-
+                HttpResponseMessage response = await _httpClient.GetAsync(_baseConnectionAddress + "/" + rn);
                 if (response.IsSuccessStatusCode)
                 {
                     string content = await response.Content.ReadAsStringAsync();
                     return Ok(content);
                 }
-                else
-                {
-                    return StatusCode((int)response.StatusCode, $"API call failed with status code: {response.StatusCode}");
-                }
             }
             catch (HttpRequestException ex)
             {
                 return StatusCode(500, $"An error occurred while making the API call: {ex.Message}");
-            }
-        }
+            }   
 
-        [HttpPost("ConnectOM2M")]
-        public async Task<IActionResult> ConnectToOM2M([FromBody] OM2MServerConnectModel model)
-        {
-            if (string.IsNullOrEmpty(model.ConnectionAddress))
-            {
-                return BadRequest("ConnectionAddress is required");
-            }
-
-            //var payload = new
-            //{
-            //    m2m = new
-            //    {
-            //        ae = new
-            //        {
-            //            rn = "Modbus Interworking Proxy",
-            //            api = "MIP"
-            //        }
-            //    }
-            //};
-
-            string payload = "{ \"m2m:ae\": { \"rn\": \"Modbus-Interworking-Proxy\", \"api\": \"MIP\", \"rr\": \"true\", \"poa\": [\"http://localhost:1000\"] } }";
+            string payload = "{ \"m2m:ae\": { \"rn\": \"" + rn + "\", \"api\": \"" + api + "\", \"rr\": \"" + rr + "\", \"poa\": [\"" + poa + "\"] } }";
 
             try
             {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, model.ConnectionAddress);
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _baseConnectionAddress);
                 request.Content = new StringContent(payload, Encoding.UTF8, "application/json"); // Set custom Content-Type header
 
                 // Set custom Content-Type header
@@ -78,6 +53,7 @@ namespace Modbus_Interworking_Proxy.Controllers
 
                 if (response.IsSuccessStatusCode)
                 {
+                    _connectionAddress = _baseConnectionAddress + "/" + rn;
                     string content = await response.Content.ReadAsStringAsync();
                     return Ok(content);
                 } 

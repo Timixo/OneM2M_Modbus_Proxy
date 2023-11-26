@@ -1,3 +1,5 @@
+using System.Net.Http.Headers;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -14,6 +16,8 @@ builder.Services.AddHttpClient("OM2MHttpClient", client =>
     // Set default headers
     client.DefaultRequestHeaders.Add("X-M2M-RI", "123");
     client.DefaultRequestHeaders.Add("X-M2M-Origin", "admin:admin");
+    client.DefaultRequestHeaders.Accept.Clear();
+    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
 var app = builder.Build();
