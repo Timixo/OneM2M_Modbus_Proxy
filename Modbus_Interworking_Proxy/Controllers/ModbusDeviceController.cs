@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Headers;
 using System.Text;
+using NModbus;
 
 namespace Modbus_Interworking_Proxy.Controllers
 {
@@ -67,5 +68,7 @@ namespace Modbus_Interworking_Proxy.Controllers
                 return StatusCode(500, $"An error occurred while making the API call: {ex.Message}");
             }
         }
+
+
     }
 }
