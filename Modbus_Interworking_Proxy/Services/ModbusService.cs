@@ -1,7 +1,6 @@
 ﻿using Modbus_Interworking_Proxy.Models;
 using NModbus;
-using NModbus.Device;
-using System.IO.Ports;
+using NModbus.Message;
 using System.Net.Sockets;
 
 namespace Modbus_Interworking_Proxy.Services
@@ -9,6 +8,7 @@ namespace Modbus_Interworking_Proxy.Services
     public class ModbusService
     {
         private readonly TcpClient _client;
+        private readonly ModbusFactory _factory;
         private readonly IModbusMaster _modbusMaster;
 
         public ModbusService(string ip, int port)
@@ -16,8 +16,8 @@ namespace Modbus_Interworking_Proxy.Services
             try
             {
                 _client = new TcpClient(ip, port);
-                ModbusFactory factory = new ModbusFactory();
-                _modbusMaster = factory.CreateMaster(_client);
+                _factory = new ModbusFactory();
+                _modbusMaster = _factory.CreateMaster(_client);
             }
             catch(Exception)
             {
