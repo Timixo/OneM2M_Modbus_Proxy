@@ -1,12 +1,21 @@
+using Microsoft.Extensions.Configuration;
+using Modbus_Interworking_Proxy.Services;
 using System.Net.Http.Headers;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+ConfigurationManager config = builder.Configuration;
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<OM2MService>();
+
+string modbusIpAddress = config.GetValue<string>("Modbus:IpAddress");
+int modbusPort = config.GetValue<int>("Modbus:Port");
+builder.Services.AddScoped(provider => new ModbusService(modbusIpAddress, modbusPort));
 
 // Add HttpClient configuration
 builder.Services.AddHttpClient("OM2MHttpClient", client =>

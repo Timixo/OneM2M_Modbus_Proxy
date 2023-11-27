@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Modbus_Interworking_Proxy.Services;
 using System.Net.Http.Headers;
 using System.Text;
-using NModbus;
 
 namespace Modbus_Interworking_Proxy.Controllers
 {
@@ -9,66 +9,27 @@ namespace Modbus_Interworking_Proxy.Controllers
     [Route("api/[controller]")]
     public class ModbusDeviceController : ControllerBase
     {
-        private string _baseConnectionAddress = "in-name";
-        private string _connectionAddress = null;
-        private readonly HttpClient _httpClient;
+        private readonly OM2MService _om2mService;
+        private readonly ModbusService _modbusService;
 
-        public ModbusDeviceController(IHttpClientFactory httpClientFactory)
+        public ModbusDeviceController(OM2MService om2mService, ModbusService modbusService)
         {
-            _httpClient = httpClientFactory.CreateClient("OM2MHttpClient");
+            _om2mService = om2mService;
+            _modbusService = modbusService;
         }
 
         [HttpPost("ConnectOM2M")]
         public async Task<IActionResult> ConnectToOM2M()
         {
-            string rn = "Modbus-Interworking-Proxy";
-            string api = "MIP";
-            string rr = "true";
-            string poa = "http://localhost:1000";
-
             try
             {
-                HttpResponseMessage response = await _httpClient.GetAsync(_baseConnectionAddress + "/" + rn);
-                if (response.IsSuccessStatusCode)
-                {
-                    string content = await response.Content.ReadAsStringAsync();
-                    return Ok(content);
-                }
+                string response = await _om2mService.ConnectToOM2M();
+                return Ok(response);
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex)
             {
-                return StatusCode(500, $"An error occurred while making the API call: {ex.Message}");
-            }   
-
-            string payload = "{ \"m2m:ae\": { \"rn\": \"" + rn + "\", \"api\": \"" + api + "\", \"rr\": \"" + rr + "\", \"poa\": [\"" + poa + "\"] } }";
-
-            try
-            {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _baseConnectionAddress);
-                request.Content = new StringContent(payload, Encoding.UTF8, "application/json"); // Set custom Content-Type header
-
-                // Set custom Content-Type header
-                request.Content.Headers.ContentType.Parameters.Add(new NameValueHeaderValue("ty", "2"));
-
-                HttpResponseMessage response = await _httpClient.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _connectionAddress = _baseConnectionAddress + "/" + rn;
-                    string content = await response.Content.ReadAsStringAsync();
-                    return Ok(content);
-                } 
-                else
-                {
-                    return StatusCode((int)response.StatusCode, $"API call failed with status code: {response.StatusCode}");
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                return StatusCode(500, $"An error occurred while making the API call: {ex.Message}");
+                return BadRequest(ex.Message);
             }
         }
-
-
     }
 }

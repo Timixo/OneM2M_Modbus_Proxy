@@ -11,9 +11,16 @@ namespace Modbus_Interworking_Proxy.Services
 
         public ModbusService(string ip, int port)
         {
-            using TcpClient client = new TcpClient(ip, port);
-            ModbusFactory factory = new ModbusFactory();
-            _modbusMaster = factory.CreateMaster(client);
+            try
+            {
+                using TcpClient client = new TcpClient(ip, port);
+                ModbusFactory factory = new ModbusFactory();
+                _modbusMaster = factory.CreateMaster(client);
+            }
+            catch(Exception)
+            {
+                return;
+            }
         }
 
         public ushort[] ReadHoldingRegisters(byte slaveId, ushort startAddress, ushort length)
