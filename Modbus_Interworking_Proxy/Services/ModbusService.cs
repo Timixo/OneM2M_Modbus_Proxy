@@ -1,4 +1,5 @@
-﻿using NModbus;
+﻿using Modbus_Interworking_Proxy.Models;
+using NModbus;
 using NModbus.Device;
 using System.IO.Ports;
 using System.Net.Sockets;
@@ -7,19 +8,39 @@ namespace Modbus_Interworking_Proxy.Services
 {
     public class ModbusService
     {
+        private readonly TcpClient _client;
         private readonly IModbusMaster _modbusMaster;
 
         public ModbusService(string ip, int port)
         {
             try
             {
-                using TcpClient client = new TcpClient(ip, port);
+                _client = new TcpClient(ip, port);
                 ModbusFactory factory = new ModbusFactory();
-                _modbusMaster = factory.CreateMaster(client);
+                _modbusMaster = factory.CreateMaster(_client);
             }
             catch(Exception)
             {
                 return;
+            }
+        }
+
+        public void Dispose()
+        {
+            _modbusMaster.Dispose();
+            _client.Dispose();
+        }
+
+        public ModbusDeviceModel LinkModbusDevice(ModbusDeviceModel model)
+        {
+            try
+            {
+                ushort[] data = _modbusMaster.ReadHoldingRegisters(model.Id, 0, 1);
+                return model;
+            }
+            catch(Exception)
+            {
+                throw new Exception("Error connecting to Modbus device");
             }
         }
 

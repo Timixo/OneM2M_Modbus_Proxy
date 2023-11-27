@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Modbus_Interworking_Proxy.Models;
 using Modbus_Interworking_Proxy.Services;
 using System.Net.Http.Headers;
 using System.Text;
@@ -24,6 +25,21 @@ namespace Modbus_Interworking_Proxy.Controllers
             try
             {
                 string response = await _om2mService.ConnectToOM2M();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("ConnectModbusDevice")]
+        public async Task<IActionResult> ConnectModbusDevice([FromBody] ModbusDeviceModel model)
+        {
+            try
+            {
+                _modbusService.LinkModbusDevice(model);
+                string response = await _om2mService.ConnectModbusDevice(model);
                 return Ok(response);
             }
             catch (Exception ex)

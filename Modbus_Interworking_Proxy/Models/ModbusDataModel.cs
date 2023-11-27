@@ -2,6 +2,14 @@
 {
     public class ModbusDataModel
     {
-        public int RegisterValue { get; set; }
+        public string Name { get; set; }
+        public string Value { get; set; }
+    }
+
+    public class ModbusDeviceModel
+    {
+        public byte Id { get; set; }
+        public string Name { get; set; }
+        public List<string> Fields { get; set; }
     }
 }
