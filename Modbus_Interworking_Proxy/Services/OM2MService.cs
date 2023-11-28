@@ -119,5 +119,68 @@ namespace Modbus_Interworking_Proxy.Services
                 throw new Exception($"An error occurred while making the API call: {ex.Message}");
             }
         }
+
+        public async Task<string> PutModbusDeviceData(ModbusDeviceDataModel model)
+        {
+            try
+            {
+                // Check if the container exists
+                HttpResponseMessage response = await _httpClient.GetAsync(_connectionAddress + "/" + model.Name);
+                if (!response.IsSuccessStatusCode)
+                {
+                    // Create the container
+                    string payload = "{ \"m2m:cnt\": { \"rn\": \"" + model.Name + "\" } }";
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _connectionAddress);
+                    request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+                    request.Content.Headers.ContentType.Parameters.Add(new NameValueHeaderValue("ty", "3"));
+
+                    response = await _httpClient.SendAsync(request);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new Exception($"API call failed with status code: {response.StatusCode}");
+                    }
+                }
+
+                // Create data containers
+                foreach (ModbusDataModel data in model.Data)
+                {
+                    response = await _httpClient.GetAsync(_connectionAddress + "/" + model.Name + "/" + data.Name);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        string payload = "{ \"m2m:cnt\": { \"rn\": \"" + data.Name + "\" } }";
+                        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _connectionAddress + "/" + model.Name);
+                        request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+                        request.Content.Headers.ContentType.Parameters.Add(new NameValueHeaderValue("ty", "3"));
+
+                        response = await _httpClient.SendAsync(request);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            throw new Exception($"API call failed with status code: {response.StatusCode}");
+                        }
+                    }
+                }
+
+                // Create data instances
+                foreach (ModbusDataModel data in model.Data)
+                {
+                    string payload = "{ \"m2m:cin\": { \"cnf\": \"application/json\", \"con\": \"" + data.Value + "\" } }";
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, _connectionAddress + "/" + model.Name + "/" + data.Name);
+                    request.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+                    request.Content.Headers.ContentType.Parameters.Add(new NameValueHeaderValue("ty", "4"));
+
+                    response = await _httpClient.SendAsync(request);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new Exception($"API call failed with status code: {response.StatusCode}");
+                    }
+                }
+
+                return "Creation Succesfull";
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new Exception($"An error occurred while making the API call: {ex.Message}");
+            }
+        }
     }
 }

@@ -47,5 +47,28 @@ namespace Modbus_Interworking_Proxy.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("GetModbusDeviceData")]
+        public async Task<IActionResult> GetModbusDeviceData([FromBody] ModbusDeviceModel model)
+        {
+            try
+            {
+                ushort[] data = _modbusService.ReadHoldingRegisters(model.Id, 0, (ushort)model.Fields.Count);
+                ModbusDeviceDataModel dataModel = new ModbusDeviceDataModel
+                {
+                    Id = model.Id,
+                    Name = model.Name,
+                    Data = new List<ModbusDataModel>()
+                };
+                dataModel.Data.AddRange(data.Select((value, index) => new ModbusDataModel { Name = model.Fields[index], Value = value.ToString() }));
+
+                string response = await _om2mService.PutModbusDeviceData(dataModel);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
