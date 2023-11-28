@@ -35,6 +35,7 @@ namespace Modbus_Interworking_Proxy.Services
         {
             try
             {
+                // model.Id doesn't do anything yet, we need to figure out how to get data from a device with the slave id, which is not the same as slave address
                 ushort[] data = _modbusMaster.ReadHoldingRegisters(model.Id, 0, 1);
                 return model;
             }
